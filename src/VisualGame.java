@@ -2,6 +2,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.Random;
+import java.util.Scanner;
 
 public class VisualGame extends JFrame {
     private JTextArea logArea;
@@ -13,81 +14,125 @@ public class VisualGame extends JFrame {
 
     public VisualGame() {
         setTitle("RPG Game");
-        setSize(700, 500);
+        setSize(900, 550);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout(10, 10));
+        getContentPane().setBackground(new Color(40, 40, 40));
 
-        Font font = new Font("Consolas", Font.PLAIN, 14);
+        Font labelFont = new Font("Segoe UI", Font.BOLD, 14);
+        Font logFont = new Font("Consolas", Font.PLAIN, 14);
 
         // Левая панель - статистика героя
         JPanel statsPanel = new JPanel();
-        statsPanel.setPreferredSize(new Dimension(220, 0));
-        statsPanel.setBorder(BorderFactory.createTitledBorder("Статистика героя"));
+        statsPanel.setPreferredSize(new Dimension(250, 0));
+        statsPanel.setBackground(new Color(60, 63, 65));
+        statsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), "Статистика героя", 0, 0, labelFont, Color.WHITE));
         statsPanel.setLayout(new GridLayout(8, 1, 5, 5));
-        statsPanel.setFont(font);
 
-        lblName = new JLabel("Имя: ");
-        lblLevel = new JLabel("Уровень: ");
-        lblHealth = new JLabel("Здоровье: ");
-        lblStrength = new JLabel("Сила: ");
-        lblAgility = new JLabel("Ловкость: ");
-        lblExp = new JLabel("Опыт: ");
-        lblGold = new JLabel("Золото: ");
+        lblName = createStatLabel("Имя: ", labelFont);
+        lblLevel = createStatLabel("Уровень: ", labelFont);
+        lblHealth = createStatLabel("Здоровье: ", labelFont);
+        lblStrength = createStatLabel("Сила: ", labelFont);
+        lblAgility = createStatLabel("Ловкость: ", labelFont);
+        lblExp = createStatLabel("Опыт: ", labelFont);
+        lblGold = createStatLabel("Золото: ", labelFont);
 
-        for (JLabel lbl : new JLabel[]{lblName, lblLevel, lblHealth, lblStrength, lblAgility, lblExp, lblGold}) {
-            lbl.setFont(font);
-            statsPanel.add(lbl);
-        }
+        statsPanel.add(lblName);
+        statsPanel.add(lblLevel);
+        statsPanel.add(lblHealth);
+        statsPanel.add(lblStrength);
+        statsPanel.add(lblAgility);
+        statsPanel.add(lblExp);
+        statsPanel.add(lblGold);
 
-        // Правая панель - лог и кнопки
-        JPanel rightPanel = new JPanel(new BorderLayout(10, 10));
-        rightPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        // Центр - лог и кнопки
+        JPanel centerPanel = new JPanel(new BorderLayout(10, 10));
+        centerPanel.setBackground(new Color(50, 53, 55));
+        centerPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         logArea = new JTextArea();
-        logArea.setFont(font);
+        logArea.setFont(logFont);
         logArea.setEditable(false);
         logArea.setLineWrap(true);
         logArea.setWrapStyleWord(true);
+        logArea.setBackground(new Color(30, 30, 30));
+        logArea.setForeground(Color.WHITE);
         JScrollPane scrollPane = new JScrollPane(logArea);
+        scrollPane.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
-        JPanel btnPanel = new JPanel(new GridLayout(1, 4, 10, 10));
-        btnMerchant = new JButton("К торговцу");
-        btnForest = new JButton("В тёмный лес");
-        btnStats = new JButton("Показать статистику");
-        btnExit = new JButton("Выход");
+        JPanel btnPanel = new JPanel(new GridLayout(1, 4, 15, 0));
+        btnPanel.setBackground(new Color(50, 53, 55));
 
-        btnMerchant.setToolTipText("Купить зелья лечения");
-        btnForest.setToolTipText("Сразиться с монстром");
-        btnStats.setToolTipText("Показать текущие характеристики");
-        btnExit.setToolTipText("Выйти из игры");
+        btnMerchant = createButton("К торговцу");
+        btnForest = createButton("В тёмный лес");
+        btnStats = createButton("Показать статистику");
+        btnExit = createButton("Выход");
 
         btnPanel.add(btnMerchant);
         btnPanel.add(btnForest);
         btnPanel.add(btnStats);
         btnPanel.add(btnExit);
 
-        rightPanel.add(scrollPane, BorderLayout.CENTER);
-        rightPanel.add(btnPanel, BorderLayout.SOUTH);
+        centerPanel.add(scrollPane, BorderLayout.CENTER);
+        centerPanel.add(btnPanel, BorderLayout.SOUTH);
 
         add(statsPanel, BorderLayout.WEST);
-        add(rightPanel, BorderLayout.CENTER);
+        add(centerPanel, BorderLayout.CENTER);
 
-        // Кнопки
+        // Обработчики кнопок
         btnMerchant.addActionListener(e -> visitMerchant());
         btnForest.addActionListener(e -> enterForest());
         btnStats.addActionListener(e -> showStatsDialog());
         btnExit.addActionListener(e -> exitGame());
 
-        // Ввод имени
+        SwingUtilities.invokeLater(this::startGame);
+    }
+
+    private JLabel createStatLabel(String text, Font font) {
+        JLabel lbl = new JLabel(text);
+        lbl.setForeground(Color.WHITE);
+        lbl.setFont(font);
+        return lbl;
+    }
+
+    private JButton createButton(String text) {
+        JButton btn = new JButton(text);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setBackground(new Color(75, 110, 175));
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
+    }
+
+    private void log(String text) {
+        SwingUtilities.invokeLater(() -> {
+            logArea.append(text + "\n");
+            logArea.setCaretPosition(logArea.getDocument().getLength());
+        });
+    }
+
+    private void updateStats() {
+        SwingUtilities.invokeLater(() -> {
+            lblName.setText("Имя: " + player.getName());
+            lblLevel.setText("Уровень: " + player.getLevel());
+            lblHealth.setText(String.format("Здоровье: %d / %d", player.getHealth(), player.getMaxHealth()));
+            lblStrength.setText("Сила: " + player.getStrength());
+            lblAgility.setText("Ловкость: " + player.getAgility());
+            lblExp.setText("Опыт: " + player.getExperience());
+            lblGold.setText("Золото: " + player.getGold());
+        });
+    }
+
+    private void startGame() {
         String name = null;
         while (name == null || name.trim().isEmpty()) {
             name = JOptionPane.showInputDialog(this, "Введите имя героя:", "Создание персонажа", JOptionPane.PLAIN_MESSAGE);
-            if (name == null) {
-                System.exit(0);
-            }
+            if (name == null) System.exit(0);
         }
 
-        // Выбор класса с описанием
         String[] options = {"Маг", "Танк", "Ловкач"};
         String[] descriptions = {
                 "Маг: мало здоровья, большой урон.",
@@ -95,61 +140,32 @@ public class VisualGame extends JFrame {
                 "Ловкач: среднее здоровье, высокий урон, частые критические удары."
         };
 
-        int classChoice = -1;
-        while (classChoice == -1) {
-            classChoice = JOptionPane.showOptionDialog(
-                    this,
-                    "Выберите класс героя:\n\n" +
-                            "1. Маг - мало здоровья, большой урон.\n" +
-                            "2. Танк - много здоровья и защиты, маленький урон.\n" +
-                            "3. Ловкач - среднее здоровье, высокий урон, частые критические удары.\n\n" +
-                            "Выберите класс:",
-                    "Выбор класса",
-                    JOptionPane.DEFAULT_OPTION,
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    options,
-                    options[0]);
-            if (classChoice == -1) {
-                int res = JOptionPane.showConfirmDialog(this, "Вы действительно хотите выйти?", "Выход", JOptionPane.YES_NO_OPTION);
-                if (res == JOptionPane.YES_OPTION) {
-                    System.exit(0);
-                }
-            }
-        }
+        int classChoice = JOptionPane.showOptionDialog(
+                this,
+                "Выберите класс героя:\n\n" +
+                        "1. Маг - мало здоровья, большой урон.\n" +
+                        "2. Танк - много здоровья и защиты, маленький урон.\n" +
+                        "3. Ловкач - среднее здоровье, высокий урон, частые критические удары.\n\n" +
+                        "Выберите класс:",
+                "Выбор класса",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]);
+
+        if (classChoice == -1) System.exit(0);
 
         switch (classChoice) {
-            case 0:
-                player = new Player(name.trim(), 80, 15, 12);
-                break;
-            case 1:
-                player = new Player(name.trim(), 130, 12, 8);
-                break;
-            case 2:
-                player = new Player(name.trim(), 100, 10, 18);
-                break;
-            default:
-                player = new Player(name.trim(), 100, 10, 10);
+            case 0 -> player = new Player(name.trim(), 80, 15, 12);
+            case 1 -> player = new Player(name.trim(), 130, 12, 8);
+            case 2 -> player = new Player(name.trim(), 100, 10, 18);
+            default -> player = new Player(name.trim(), 100, 10, 10);
         }
 
         log("Добро пожаловать, " + player.getName() + " класс " + options[classChoice] + "!");
         log("Описание: " + descriptions[classChoice]);
         updateStats();
-    }
-
-    private void log(String text) {
-        logArea.append(text + "\n");
-        logArea.setCaretPosition(logArea.getDocument().getLength());
-    }
-
-    private void updateStats() {
-        lblName.setText("Имя: " + player.getName());
-        lblLevel.setText("Уровень: " + player.getLevel());
-        lblHealth.setText(String.format("Здоровье: %d / %d", player.getHealth(), player.getMaxHealth()));
-        lblStrength.setText("Сила: " + player.strength);
-        lblAgility.setText("Ловкость: " + player.agility);
-        lblExp.setText("Опыт: " + player.getExperience());
-        lblGold.setText("Золото: " + player.getGold());
     }
 
     private void visitMerchant() {
@@ -198,12 +214,19 @@ public class VisualGame extends JFrame {
     private void battle(Monster monster) {
         try {
             while (player.isAlive() && monster.isAlive()) {
-                Thread.sleep(1000);
+                Thread.sleep(700);
+
                 int damage = player.attack();
-                monster.takeDamage(damage);
-                log(player.getName() + " наносит " + damage + " урона " + monster.getName() +
-                        ". Здоровье монстра: " + monster.getHealth() + "/" + monster.getMaxHealth());
+                if (damage == 0) {
+                    log(player.getName() + " промахивается!");
+                } else {
+                    monster.takeDamage(damage);
+                    log(player.getName() + " наносит " + damage + " урона " + monster.getName() +
+                            ". Здоровье монстра: " + monster.getHealth() + "/" + monster.getMaxHealth());
+                    // Критический урон выводится внутри attack()
+                }
                 updateStats();
+
                 if (!monster.isAlive()) {
                     log("Вы победили " + monster.getName() + "!");
                     player.addExperience(monster.getExpReward());
@@ -213,12 +236,18 @@ public class VisualGame extends JFrame {
                     break;
                 }
 
-                Thread.sleep(1000);
+                Thread.sleep(700);
+
                 damage = monster.attack();
-                player.takeDamage(damage);
-                log(monster.getName() + " наносит " + damage + " урона " + player.getName() +
-                        ". Ваше здоровье: " + player.getHealth() + "/" + player.getMaxHealth());
+                if (damage == 0) {
+                    log(monster.getName() + " промахивается!");
+                } else {
+                    player.takeDamage(damage);
+                    log(monster.getName() + " наносит " + damage + " урона " + player.getName() +
+                            ". Ваше здоровье: " + player.getHealth() + "/" + player.getMaxHealth());
+                }
                 updateStats();
+
                 if (!player.isAlive()) {
                     log("Вы были убиты. Игра окончена.");
                     JOptionPane.showMessageDialog(this, "Вы погибли. Игра окончена.");
@@ -236,8 +265,8 @@ public class VisualGame extends JFrame {
         String stats = "Имя: " + player.getName() + "\n" +
                 "Уровень: " + player.getLevel() + "\n" +
                 "Здоровье: " + player.getHealth() + "/" + player.getMaxHealth() + "\n" +
-                "Сила: " + player.strength + "\n" +
-                "Ловкость: " + player.agility + "\n" +
+                "Сила: " + player.getStrength() + "\n" +
+                "Ловкость: " + player.getAgility() + "\n" +
                 "Опыт: " + player.getExperience() + "\n" +
                 "Золото: " + player.getGold();
         JOptionPane.showMessageDialog(this, stats, "Статистика игрока", JOptionPane.INFORMATION_MESSAGE);
@@ -251,20 +280,24 @@ public class VisualGame extends JFrame {
     }
 
     private void disableButtons() {
-        btnMerchant.setEnabled(false);
-        btnForest.setEnabled(false);
-        btnStats.setEnabled(false);
-        btnExit.setEnabled(false);
+        SwingUtilities.invokeLater(() -> {
+            btnMerchant.setEnabled(false);
+            btnForest.setEnabled(false);
+            btnStats.setEnabled(false);
+            btnExit.setEnabled(false);
+        });
     }
 
     private void enableButtons() {
-        btnMerchant.setEnabled(true);
-        btnForest.setEnabled(true);
-        btnStats.setEnabled(true);
-        btnExit.setEnabled(true);
+        SwingUtilities.invokeLater(() -> {
+            btnMerchant.setEnabled(true);
+            btnForest.setEnabled(true);
+            btnStats.setEnabled(true);
+            btnExit.setEnabled(true);
+        });
     }
 
-    // --- Классы персонажей ---
+    // --- Классы персонажей и монстров ---
 
     abstract class Character {
         protected String name;
@@ -298,12 +331,9 @@ public class VisualGame extends JFrame {
                 int damage = critical ? strength * 2 : strength;
                 if (critical) {
                     log(name + " наносит КРИТИЧЕСКИЙ удар! Урон: " + damage);
-                } else {
-                    log(name + " наносит удар. Урон: " + damage);
                 }
                 return damage;
             } else {
-                log(name + " промахивается!");
                 return 0;
             }
         }
@@ -348,6 +378,14 @@ public class VisualGame extends JFrame {
 
         public void spendGold(int g) {
             gold -= g;
+        }
+
+        public int getStrength() {
+            return strength;
+        }
+
+        public int getAgility() {
+            return agility;
         }
     }
 
@@ -415,9 +453,40 @@ public class VisualGame extends JFrame {
     class Merchant {
         private int potionPrice = 20;
         private int potionHealAmount = 50;
+
+        public void trade(Player player, Scanner scanner) {
+            System.out.println("Торговец: Добро пожаловать! У меня есть зелья лечения за " + potionPrice + " золота.");
+            System.out.println("У вас золота: " + player.getGold());
+            System.out.println("Введите количество зелий для покупки (0 - выйти): ");
+
+            while (true) {
+                String input = scanner.nextLine();
+                int count;
+                try {
+                    count = Integer.parseInt(input);
+                } catch (NumberFormatException e) {
+                    System.out.println("Пожалуйста, введите число.");
+                    continue;
+                }
+                if (count == 0) {
+                    System.out.println("Выход из торговли.");
+                    break;
+                }
+                int cost = count * potionPrice;
+                if (cost > player.getGold()) {
+                    System.out.println("У вас недостаточно золота!");
+                } else {
+                    player.spendGold(cost);
+                    player.heal(potionHealAmount * count);
+                    System.out.println("Вы купили " + count + " зелий и восстановили " + (potionHealAmount * count) + " здоровья.");
+                    System.out.println("Текущее здоровье: " + player.getHealth() + "/" + player.getMaxHealth());
+                    System.out.println("Остаток золота: " + player.getGold());
+                    System.out.println("Если хотите купить ещё, введите количество, иначе 0 для выхода:");
+                }
+            }
+        }
     }
 
-    // Точка входа
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             VisualGame game = new VisualGame();
